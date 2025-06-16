@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { hasPasswordHelper } from 'src/helpers/utils';
 import aqp from 'api-query-params';
@@ -12,6 +12,7 @@ export class UsersService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
+    // eslint-disable-next-line prettier/prettier
   ) { }
 
   isEmailExist = async (email: string) => {
@@ -59,11 +60,23 @@ export class UsersService {
     return `This action returns a #${id} user`;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findByEmail(email: string) {
+    return await this.userModel.findOne({ email });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async update(updateUserDto: UpdateUserDto) {
+    return await this.userModel.updateOne(
+      { _id: updateUserDto._id },
+      { ...updateUserDto },
+    );
+  }
+
+  async remove(id: string) {
+    console.log('**** cc id', id);
+    if (mongoose.isValidObjectId(id)) {
+      return await this.userModel.deleteOne({ _id: id });
+    } else {
+      throw new BadRequestException('Id khong hop le');
+    }
   }
 }
